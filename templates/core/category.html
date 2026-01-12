@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }} - 资源分享站{% endblock %}
+
+{% block content %}
+<div class="category-container">
+    <!-- 分类头部 -->
+    <div class="category-header">
+        <h1 class="category-title">{{ category.name }}</h1>
+        <p class="category-description">共有 {{ resources.paginator.count }} 个资源</p>
+    </div>
+
+    <!-- 排序选项 -->
+    <div class="sort-options">
+        <span class="sort-label">排序方式：</span>
+        <a href="?sort=newest" class="sort-btn {% if sort == 'newest' %}active{% endif %}">最新</a>
+        <a href="?sort=hot" class="sort-btn {% if sort == 'hot' %}active{% endif %}">最热</a>
+        <a href="?sort=views" class="sort-btn {% if sort == 'views' %}active{% endif %}">浏览最多</a>
+        <a href="?sort=likes" class="sort-btn {% if sort == 'likes' %}active{% endif %}">点赞最多</a>
+    </div>
+
+    <!-- 资源列表 -->
+    <div class="category-resources">
+        {% if resources %}
+            <div class="resources-grid">
+                {% for resource in resources %}
+                <div class="resource-card">
+                    <div class="resource-header">
+                        <span class="resource-category">{{ resource.category.name }}</span>
+                        <span class="resource-cloud">{{ resource.cloud_type.name }}</span>
+                    </div>
+                    <h3 class="resource-title">
+                        <a href="{% url 'core:resource_detail' resource.id %}">{{ resource.title }}</a>
+                    </h3>
+                    <p class="resource-desc">{{ resource.description|truncatechars:80 }}</p>
+                    <div class="resource-meta">
+                        <span class="resource-stats">
+                            👁️ {{ resource.view_count }} | 👍 {{ resource.like_count }} | 📋 {{ resource.copy_count }}
+                        </span>
+                        <span class="resource-time">{{ resource.created_at|date:"Y-m-d" }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- 分页 -->
+            {% if resources.has_other_pages %}
+            <div class="pagination">
+                {% if resources.has_previous %}
+                    <a href="?page={{ resources.previous_page_number }}{% if sort %}&sort={{ sort }}{% endif %}" class="page-link">上一页</a>
+                {% endif %}
+
+                {% for num in resources.paginator.page_range %}
+                    {% if resources.number == num %}
+                        <span class="page-current">{{ num }}</span>
+                    {% elif num > resources.number|add:'-3' and num < resources.number|add:'3' %}
+                        <a href="?page={{ num }}{% if sort %}&sort={{ sort }}{% endif %}" class="page-link">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if resources.has_next %}
+                    <a href="?page={{ resources.next_page_number }}{% if sort %}&sort={{ sort }}{% endif %}" class="page-link">下一页</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="no-resources">
+                <p>该分类下暂无资源</p>
+                <a href="/" class="back-to-home">返回首页</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 样式 -->
+<style>
+    .category-container {
+        background-color: white;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .category-header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #007bff;
+    }
+    .category-title {
+        font-size: 32px;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    .category-description {
+        font-size: 16px;
+        color: #666;
+    }
+
+    .sort-options {
+        margin-bottom: 25px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+    .sort-label {
+        font-weight: 600;
+        color: #333;
+        margin-right: 15px;
+    }
+    .sort-btn {
+        display: inline-block;
+        padding: 8px 20px;
+        margin-right: 10px;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        color: #666;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .sort-btn:hover {
+        background-color: #f0f0f0;
+        color: #333;
+    }
+    .sort-btn.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+
+    .category-resources {
+        margin-top: 20px;
+    }
+    .resources-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+    .resource-card {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        border: 1px solid #eee;
+    }
+    .resource-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    }
+    .resource-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+    .resource-category {
+        background-color: #e3f2fd;
+        color: #1976d2;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .resource-cloud {
+        background-color: #f3e5f5;
+        color: #7b1fa2;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .resource-title {
+        margin-bottom: 12px;
+    }
+    .resource-title a {
+        color: #333;
+        text-decoration: none;
+        font-size: 18px;
+        line-height: 1.4;
+        font-weight: 600;
+    }
+    .resource-title a:hover {
+        color: #007bff;
+    }
+    .resource-desc {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 15px;
+        min-height: 42px;
+    }
+    .resource-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 12px;
+        border-top: 1px solid #eee;
+        font-size: 12px;
+        color: #888;
+    }
+    .resource-stats {
+        display: flex;
+        gap: 10px;
+    }
+    .resource-time {
+        font-weight: 500;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+    .page-link {
+        padding: 8px 16px;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        color: #007bff;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .page-link:hover {
+        background-color: #e9ecef;
+    }
+    .page-current {
+        padding: 8px 16px;
+        background-color: #007bff;
+        color: white;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    .no-resources {
+        text-align: center;
+        padding: 60px 20px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+    }
+    .no-resources p {
+        font-size: 18px;
+        color: #666;
+        margin-bottom: 20px;
+    }
+    .back-to-home {
+        display: inline-block;
+        padding: 12px 30px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: background-color 0.3s;
+    }
+    .back-to-home:hover {
+        background-color: #0056b3;
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .category-container {
+            padding: 20px;
+        }
+        .category-title {
+            font-size: 24px;
+        }
+        .sort-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .sort-label {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        .resources-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .pagination {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+{% endblock %}

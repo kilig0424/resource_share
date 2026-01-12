@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+media/
+staticfiles/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment variables
+.env
+
+# Database
+*.db
+
+# 临时文件
+*.tmp
+*.temp
+
+# 日志文件
+*.log
+logs/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db

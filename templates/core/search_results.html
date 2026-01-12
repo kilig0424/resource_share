@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}搜索"{{ query }}" - 资源分享站{% endblock %}
+
+{% block content %}
+<div class="search-results-container">
+    <!-- 搜索头部 -->
+    <div class="search-results-header">
+        <h1 class="search-results-title">
+            搜索"<span class="query-text">{{ query }}</span>"
+        </h1>
+        <p class="search-results-count">
+            共找到 <span class="count-number">{{ total_count }}</span> 个相关资源
+        </p>
+
+        <!-- 返回搜索框 -->
+        <div class="search-box-container">
+            <form class="search-form" method="GET" action="{% url 'core:search_resources' %}">
+                <input type="text" name="q" class="search-input" value="{{ query }}" placeholder="请输入资源关键词..." required>
+                <button type="submit" class="search-button">搜索</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 搜索结果 -->
+    <div class="search-results-content">
+        {% if resources %}
+            <div class="results-grid">
+                {% for resource in resources %}
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="result-category">{{ resource.category.name }}</span>
+                        <span class="result-cloud">{{ resource.cloud_type.name }}</span>
+                    </div>
+                    <h3 class="result-title">
+                        <a href="{% url 'core:resource_detail' resource.id %}">
+                            {{ resource.title|highlight:query }}
+                        </a>
+                    </h3>
+                    <p class="result-desc">
+                        {{ resource.description|truncatechars:100|highlight:query }}
+                    </p>
+                    <div class="result-meta">
+                        <span class="result-stats">
+                            👁️ {{ resource.view_count }} | 👍 {{ resource.like_count }} | 📋 {{ resource.copy_count }}
+                        </span>
+                        <span class="result-time">{{ resource.created_at|date:"Y-m-d" }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- 分页 -->
+            {% if resources.has_other_pages %}
+            <div class="pagination">
+                {% if resources.has_previous %}
+                    <a href="?q={{ query }}&page={{ resources.previous_page_number }}" class="page-link">上一页</a>
+                {% endif %}
+
+                {% for num in resources.paginator.page_range %}
+                    {% if resources.number == num %}
+                        <span class="page-current">{{ num }}</span>
+                    {% elif num > resources.number|add:'-3' and num < resources.number|add:'3' %}
+                        <a href="?q={{ query }}&page={{ num }}" class="page-link">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if resources.has_next %}
+                    <a href="?q={{ query }}&page={{ resources.next_page_number }}" class="page-link">下一页</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="no-results">
+                <div class="no-results-icon">🔍</div>
+                <h3>没有找到相关资源</h3>
+                <p>尝试使用其他关键词搜索，或者</p>
+                <a href="/" class="back-to-home">返回首页</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 样式 -->
+<style>
+    .search-results-container {
+        background-color: white;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        min-height: 500px;
+    }
+
+    .search-results-header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #007bff;
+    }
+    .search-results-title {
+        font-size: 28px;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    .query-text {
+        color: #ff6b6b;
+        font-weight: 600;
+    }
+    .search-results-count {
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 25px;
+    }
+    .count-number {
+        color: #007bff;
+        font-weight: 600;
+        font-size: 20px;
+    }
+
+    .search-box-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .search-form {
+        display: flex;
+        gap: 10px;
+    }
+    .search-input {
+        flex: 1;
+        padding: 12px 20px;
+        font-size: 16px;
+        border: 2px solid #007bff;
+        border-radius: 25px;
+        outline: none;
+    }
+    .search-button {
+        padding: 12px 30px;
+        background-color: #ff6b6b;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .search-button:hover {
+        background-color: #ff5252;
+    }
+
+    .search-results-content {
+        margin-top: 20px;
+    }
+    .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+    .result-card {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        border: 1px solid #eee;
+    }
+    .result-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    }
+    .result-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+    .result-category {
+        background-color: #e3f2fd;
+        color: #1976d2;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .result-cloud {
+        background-color: #f3e5f5;
+        color: #7b1fa2;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .result-title {
+        margin-bottom: 12px;
+    }
+    .result-title a {
+        color: #333;
+        text-decoration: none;
+        font-size: 18px;
+        line-height: 1.4;
+        font-weight: 600;
+    }
+    .result-title a:hover {
+        color: #007bff;
+    }
+    .result-desc {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 15px;
+        min-height: 42px;
+    }
+    .result-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 12px;
+        border-top: 1px solid #eee;
+        font-size: 12px;
+        color: #888;
+    }
+    .result-stats {
+        display: flex;
+        gap: 10px;
+    }
+    .result-time {
+        font-weight: 500;
+    }
+
+    /* 搜索结果高亮 */
+    .highlight {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 0 2px;
+        border-radius: 2px;
+        font-weight: 600;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+    .page-link {
+        padding: 8px 16px;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        color: #007bff;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .page-link:hover {
+        background-color: #e9ecef;
+    }
+    .page-current {
+        padding: 8px 16px;
+        background-color: #007bff;
+        color: white;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    .no-results-icon {
+        font-size: 60px;
+        margin-bottom: 20px;
+    }
+    .no-results h3 {
+        font-size: 24px;
+        color: #333;
+        margin-bottom: 15px;
+    }
+    .no-results p {
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 25px;
+    }
+    .back-to-home {
+        display: inline-block;
+        padding: 12px 30px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: background-color 0.3s;
+    }
+    .back-to-home:hover {
+        background-color: #0056b3;
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .search-results-container {
+            padding: 20px;
+        }
+        .search-results-title {
+            font-size: 22px;
+        }
+        .search-form {
+            flex-direction: column;
+        }
+        .search-button {
+            width: 100%;
+        }
+        .results-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .pagination {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 搜索关键词高亮函数
+    function highlightText(text, query) {
+        if (!query) return text;
+        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<span class="highlight">$1</span>');
+    }
+
+    // 页面加载后自动高亮搜索关键词
+    document.addEventListener('DOMContentLoaded', function() {
+        const query = "{{ query }}";
+        if (!query) return;
+
+        // 高亮标题
+        document.querySelectorAll('.result-title a').forEach(element => {
+            const originalText = element.textContent;
+            element.innerHTML = highlightText(originalText, query);
+        });
+
+        // 高亮描述
+        document.querySelectorAll('.result-desc').forEach(element => {
+            const originalText = element.textContent;
+            element.innerHTML = highlightText(originalText, query);
+        });
+    });
+</script>
+{% endblock %}

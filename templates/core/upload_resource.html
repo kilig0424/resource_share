@@ -1,0 +1,582 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title|default:"上传资源" }} - 资源分享站{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="upload-header">
+        <h1 class="upload-title">上传资源</h1>
+        <p class="upload-description">分享您的资源，让更多人受益</p>
+    </div>
+
+    {% if messages %}
+    <div class="upload-messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" class="upload-form" id="upload-form">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <h3 class="section-title">基本信息</h3>
+            
+            <div class="form-row">
+                <div class="form-group required">
+                    <label for="id_title" class="form-label">{{ form.title.label }}</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                    <div class="form-error">{{ form.title.errors }}</div>
+                    {% endif %}
+                    <small class="form-help">请输入清晰明确的资源标题</small>
+                </div>
+            </div>
+
+            <div class="form-row two-columns">
+                <div class="form-group required">
+                    <label for="id_category" class="form-label">{{ form.category.label }}</label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                    <div class="form-error">{{ form.category.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group required">
+                    <label for="id_cloud_type" class="form-label">{{ form.cloud_type.label }}</label>
+                    {{ form.cloud_type }}
+                    {% if form.cloud_type.errors %}
+                    <div class="form-error">{{ form.cloud_type.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3 class="section-title">资源描述</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_description" class="form-label">{{ form.description.label }}</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                    <div class="form-error">{{ form.description.errors }}</div>
+                    {% endif %}
+                    <small class="form-help">详细描述资源内容、特点、使用方法等</small>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_keywords" class="form-label">{{ form.keywords.label }}</label>
+                    {{ form.keywords }}
+                    {% if form.keywords.errors %}
+                    <div class="form-error">{{ form.keywords.errors }}</div>
+                    {% endif %}
+                    <small class="form-help">{{ form.keywords.help_text }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3 class="section-title">资源链接</h3>
+            
+            <div class="form-row">
+                <div class="form-group required">
+                    <label for="id_resource_url" class="form-label">{{ form.resource_url.label }}</label>
+                    {{ form.resource_url }}
+                    {% if form.resource_url.errors %}
+                    <div class="form-error">{{ form.resource_url.errors }}</div>
+                    {% endif %}
+                    <small class="form-help">{{ form.resource_url.help_text }}</small>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_extract_code" class="form-label">{{ form.extract_code.label }}</label>
+                    {{ form.extract_code }}
+                    {% if form.extract_code.errors %}
+                    <div class="form-error">{{ form.extract_code.errors }}</div>
+                    {% endif %}
+                    <small class="form-help">如果有提取码请填写</small>
+                </div>
+            </div>
+        </div>
+        <div class="form-section">
+            <h3 class="section-title">资源截图</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_screenshot" class="form-label">{{ form.screenshot.label }}</label>
+                    <div class="file-upload-area single-upload" id="file-upload-area">
+                        <div class="upload-placeholder">
+                            <span class="upload-icon">📷</span>
+                            <p class="upload-text">点击选择图片</p>
+                            <p class="upload-hint">支持 JPG、PNG、GIF、WebP 格式，图片不超过5MB</p>
+                        </div>
+                        <input type="file" name="screenshot" id="id_screenshot"
+                               accept="image/*" class="file-input">
+                    </div>
+                    <div class="preview-container single-preview" id="preview-container"></div>
+                    {% if form.screenshot.errors %}
+                    <div class="form-error">{{ form.screenshot.errors }}</div>
+                    {% endif %}
+                    <small class="form-help">{{ form.screenshot.help_text }}</small>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="form-actions">
+            <button type="submit" class="upload-button">提交资源</button>
+            <button type="reset" class="reset-button">重置表单</button>
+            <a href="{% url 'core:index' %}" class="cancel-button">取消</a>
+        </div>
+    </form>
+</div>
+
+<!-- 样式 -->
+<style>
+    .upload-container {
+        background-color: white;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .upload-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #007bff;
+    }
+    
+    .upload-title {
+        font-size: 28px;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .upload-description {
+        font-size: 16px;
+        color: #666;
+    }
+    
+    .upload-messages {
+        margin-bottom: 20px;
+    }
+    
+    .alert {
+        padding: 12px 15px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        font-size: 14px;
+    }
+    
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .alert-error, .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .alert-info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+    
+    .form-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .section-title {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .form-row {
+        margin-bottom: 20px;
+    }
+    
+    .form-row.two-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group.required .form-label:after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #555;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+    }
+    
+    .form-control:focus {
+        border-color: #007bff;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+    
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+    }
+    
+    .form-error {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+    
+    .form-help {
+        display: block;
+        margin-top: 5px;
+        font-size: 12px;
+        color: #6c757d;
+    }
+    
+    .file-upload-area {
+        position: relative;
+        border: 2px dashed #007bff;
+        border-radius: 8px;
+        padding: 40px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background-color: #f8f9fa;
+    }
+    
+    .file-upload-area:hover {
+        background-color: #e9ecef;
+        border-color: #0056b3;
+    }
+    
+    .upload-placeholder {
+        pointer-events: none;
+    }
+    
+    .upload-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+        display: block;
+    }
+    
+    .upload-text {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .upload-hint {
+        font-size: 14px;
+        color: #6c757d;
+        margin: 5px 0;
+    }
+    
+    .file-input {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
+     .preview-container {
+        margin-top: 15px;
+    }
+    
+    .preview-item {
+        position: relative;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        overflow: hidden;
+        max-width: 200px;
+    }
+    
+    .preview-img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+    
+    .preview-info {
+        padding: 8px;
+        background-color: #f8f9fa;
+        font-size: 12px;
+        color: #495057;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .remove-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 25px;
+        height: 25px;
+        background-color: rgba(220, 53, 69, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #dee2e6;
+    }
+    
+    .upload-button {
+        padding: 12px 30px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .upload-button:hover {
+        background-color: #218838;
+    }
+    
+    .reset-button {
+        padding: 12px 30px;
+        background-color: #ffc107;
+        color: #212529;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .remove-btn:hover {
+        background-color: rgba(220, 53, 69, 1);
+    }
+    .reset-button:hover {
+        background-color: #e0a800;
+    }
+    
+    .cancel-button {
+        padding: 12px 30px;
+        background-color: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        transition: background-color 0.3s;
+    }
+    
+    .cancel-button:hover {
+        background-color: #545b62;
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .upload-container {
+            padding: 20px;
+        }
+        
+        .upload-title {
+            font-size: 24px;
+        }
+        
+        .form-row.two-columns {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .upload-button,
+        .reset-button,
+        .cancel-button {
+            width: 100%;
+        }
+    }
+</style>
+
+<!-- JavaScript -->
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('id_screenshot');
+        const fileUploadArea = document.getElementById('file-upload-area');
+        const previewContainer = document.getElementById('preview-container');
+
+        if (!fileInput || !fileUploadArea || !previewContainer) {
+            console.error('找不到必要的元素，预览功能无法工作');
+            return;
+        }
+
+        console.log('文件上传预览功能已加载');
+
+        // 点击整个区域触发文件选择
+        fileUploadArea.addEventListener('click', function(e) {
+            if (e.target !== fileInput) {
+                fileInput.click();
+            }
+        });
+
+        // 文件选择变化
+        fileInput.addEventListener('change', function() {
+            console.log('文件选择变化');
+            handleFileSelect();
+        });
+
+        // 处理文件选择
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            console.log('选择的文件:', file);
+
+            if (!file) {
+                clearPreview();
+                return;
+            }
+
+            // 验证文件类型
+            if (!file.type.match('image.*')) {
+                alert('请选择图片文件（JPG、PNG、GIF、WebP格式）');
+                fileInput.value = '';
+                clearPreview();
+                return;
+            }
+
+            // 验证文件大小（5MB限制）
+            if (file.size > 5 * 1024 * 1024) {
+                alert('图片大小不能超过5MB');
+                fileInput.value = '';
+                clearPreview();
+                return;
+            }
+
+            // 生成预览
+            generatePreview(file);
+        }
+
+        // 生成图片预览
+        function generatePreview(file) {
+            console.log('生成预览');
+            clearPreview();
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                console.log('文件读取完成');
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+
+                const img = document.createElement('img');
+                img.className = 'preview-img';
+                img.src = e.target.result;
+                img.alt = file.name;
+
+                const info = document.createElement('div');
+                info.className = 'preview-info';
+                info.textContent = file.name.length > 20 ?
+                    file.name.substring(0, 20) + '...' : file.name;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '×';
+                removeBtn.title = '移除';
+                removeBtn.onclick = function() {
+                    console.log('移除图片');
+                    fileInput.value = '';
+                    clearPreview();
+                };
+
+                previewItem.appendChild(img);
+                previewItem.appendChild(info);
+                previewItem.appendChild(removeBtn);
+                previewContainer.appendChild(previewItem);
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        // 清除预览
+        function clearPreview() {
+            console.log('清除预览');
+            previewContainer.innerHTML = '';
+        }
+
+        // 拖拽支持
+        fileUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.backgroundColor = '#e9ecef';
+            this.style.borderColor = '#0056b3';
+        });
+
+        fileUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.backgroundColor = '#f8f9fa';
+            this.style.borderColor = '#007bff';
+        });
+
+        fileUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.backgroundColor = '#f8f9fa';
+            this.style.borderColor = '#007bff';
+
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect();
+            }
+        });
+    });
+</script>
+{% endblock %}
