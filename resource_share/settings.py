@@ -126,7 +126,7 @@ TIME_ZONE = 'Asia/Shanghai'  # 上海时区
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)

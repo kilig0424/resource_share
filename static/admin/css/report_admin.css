@@ -1,0 +1,38 @@
+/* 举报管理页面样式 */
+.button {
+    display: inline-block;
+    padding: 5px 10px;
+    text-decoration: none;
+    border-radius: 3px;
+    font-size: 12px;
+    margin-right: 5px;
+}
+
+.button.view-resource {
+    background: #417690;
+    color: white;
+}
+
+.button.delete-report {
+    background: #ba2121;
+    color: white;
+}
+
+.button.ignore-report {
+    background: #999;
+    color: white;
+}
+
+.report-count-high {
+    color: #ba2121;
+    font-weight: bold;
+}
+
+.report-count-medium {
+    color: #ff9900;
+    font-weight: bold;
+}
+
+.report-count-low {
+    color: #417690;
+}

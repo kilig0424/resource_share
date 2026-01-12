@@ -5,7 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import ResourceUploadForm
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Category, CloudType, Resource, Favorite, Comment
+from .models import Category, CloudType, Resource, Favorite, Comment, Report
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 def index(request):
@@ -50,7 +51,7 @@ def resource_detail(request, resource_id):
     return render(request, 'core/resource_detail.html', context)
 
 
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 
 def category_resources(request, category_id):
@@ -140,6 +141,11 @@ def search_resources(request):
 @login_required
 def upload_resource(request):
     """上传资源视图"""
+    # 检查用户是否有上传权限
+    if not request.user.upload_permission:
+        messages.error(request, '您没有上传权限，请先申请或联系管理员')
+        return redirect('core:index')
+
     if request.method == 'POST':
         form = ResourceUploadForm(request.POST, request.FILES)
 
@@ -311,3 +317,83 @@ def delete_comment(request, comment_id):
         'message': '评论已删除',
         'comment_count': resource.comment_count
     })
+
+
+@login_required
+@require_POST
+def report_resource(request, resource_id):
+    """举报资源"""
+    resource = get_object_or_404(Resource, id=resource_id)
+    user = request.user
+
+    # 检查用户是否已经举报过该资源
+    report, created = Report.objects.get_or_create(user=user, resource=resource)
+
+    if not created:
+        # 用户已经举报过，返回错误
+        return JsonResponse({
+            'status': 'error',
+            'message': '您已经举报过此资源'
+        }, status=400)
+    else:
+        # 新增举报，更新举报计数
+        resource.report_count += 1
+        resource.save(update_fields=['report_count'])
+
+        return JsonResponse({
+            'status': 'success',
+            'message': '举报成功，感谢您的反馈',
+            'report_count': resource.report_count
+        })
+
+
+# def hot_resources(request):
+#     """热门资源排行榜"""
+#     # 获取排序参数
+#     sort_by = request.GET.get('sort', 'hot')  # 默认按热度排序
+#
+#     # 构建查询
+#     resources = Resource.objects.filter(is_approved=True)
+#
+#     if sort_by == 'newest':
+#         resources = resources.order_by('-created_at')
+#         sort_name = '最新资源'
+#     elif sort_by == 'views':
+#         resources = resources.order_by('-view_count')
+#         sort_name = '浏览最多'
+#     elif sort_by == 'likes':
+#         resources = resources.order_by('-like_count')
+#         sort_name = '点赞最多'
+#     elif sort_by == 'collects':
+#         resources = resources.order_by('-collect_count')
+#         sort_name = '收藏最多'
+#     elif sort_by == 'comments':
+#         resources = resources.order_by('-comment_count')
+#         sort_name = '评论最多'
+#     elif sort_by == 'copies':
+#         resources = resources.order_by('-copy_count')
+#         sort_name = '复制最多'
+#     else:  # 'hot' 热度排序（综合排序）
+#         # 热度算法：view_count*1 + like_count*3 + collect_count*5 + comment_count*2
+#         # 注意：由于Django不支持直接在查询中使用计算字段，我们先按时间排序，稍后在前端或另外处理
+#         resources = resources.order_by('-created_at')
+#         sort_name = '热门资源'
+#
+#     # 分页处理
+#     paginator = Paginator(resources, 20)  # 每页20个
+#     page = request.GET.get('page')
+#
+#     try:
+#         resources = paginator.page(page)
+#     except PageNotAnInteger:
+#         resources = paginator.page(1)
+#     except EmptyPage:
+#         resources = paginator.page(paginator.num_pages)
+#
+#     context = {
+#         'resources': resources,
+#         'sort_by': sort_by,
+#         'sort_name': sort_name,
+#         'total_count': paginator.count,
+#     }
+#     return render(request, 'core/hot_resources.html', context)

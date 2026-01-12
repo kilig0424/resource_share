@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+
+{% block title %}申请状态 - 资源分享站{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 class="auth-title">上传权限申请状态</h2>
+        
+        {% if messages %}
+        <div class="auth-messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="status-container">
+            <!-- 状态卡片 -->
+            <div class="status-card {{ user.apply_status }}">
+                <div class="status-header">
+                    <div class="status-icon">
+                        {% if user.apply_status == 'not_applied' %}
+                            📝
+                        {% elif user.apply_status == 'pending' %}
+                            ⏳
+                        {% elif user.apply_status == 'approved' %}
+                            ✅
+                        {% elif user.apply_status == 'rejected' %}
+                            ❌
+                        {% endif %}
+                    </div>
+                    <div class="status-info">
+                        <h3 class="status-title">{{ status_display }}</h3>
+                        <p class="status-desc">
+                            {% if user.apply_status == 'not_applied' %}
+                                您还未申请上传权限
+                            {% elif user.apply_status == 'pending' %}
+                                您的申请正在审核中，请耐心等待
+                            {% elif user.apply_status == 'approved' %}
+                                恭喜！您的申请已通过审核
+                            {% elif user.apply_status == 'rejected' %}
+                                很遗憾，您的申请未通过审核
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="status-details">
+                    {% if user.apply_time %}
+                    <div class="detail-item">
+                        <span class="detail-label">申请时间：</span>
+                        <span class="detail-value">{{ user.apply_time|date:"Y-m-d H:i" }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.review_time %}
+                    <div class="detail-item">
+                        <span class="detail-label">审核时间：</span>
+                        <span class="detail-value">{{ user.review_time|date:"Y-m-d H:i" }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.review_message %}
+                    <div class="detail-item">
+                        <span class="detail-label">审核备注：</span>
+                        <span class="detail-value">{{ user.review_message }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.upload_permission %}
+                    <div class="detail-item">
+                        <span class="detail-label">当前权限：</span>
+                        <span class="detail-value permission-active">已开通上传权限</span>
+                    </div>
+                    {% else %}
+                    <div class="detail-item">
+                        <span class="detail-label">当前权限：</span>
+                        <span class="detail-value permission-inactive">无上传权限</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="action-buttons">
+                {% if user.apply_status == 'not_applied' %}
+                    <a href="{% url 'accounts:apply_permission' %}" class="action-btn primary-btn">
+                        立即申请
+                    </a>
+                {% elif user.apply_status == 'pending' %}
+                    <button class="action-btn secondary-btn" disabled>
+                        审核中，请耐心等待
+                    </button>
+                {% elif user.apply_status == 'rejected' %}
+                    <a href="{% url 'accounts:apply_permission' %}" class="action-btn primary-btn">
+                        重新申请
+                    </a>
+                {% endif %}
+                
+                {% if user.upload_permission %}
+                    <a href="{% url 'core:upload_resource' %}" class="action-btn success-btn">
+                        立即上传资源
+                    </a>
+                {% endif %}
+                
+                <a href="{% url 'core:index' %}" class="action-btn default-btn">
+                    返回首页
+                </a>
+            </div>
+            
+            <!-- 状态说明 -->
+            <div class="status-instructions">
+                <h4>状态说明：</h4>
+                <ul>
+                    <li><strong>未申请</strong>：您还未提交上传权限申请</li>
+                    <li><strong>审核中</strong>：申请已提交，管理员正在审核</li>
+                    <li><strong>已通过</strong>：申请已批准，您可以上传资源</li>
+                    <li><strong>被拒绝</strong>：申请未通过，请查看审核备注</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 70vh;
+        padding: 20px;
+    }
+    
+    .auth-card {
+        background-color: white;
+        border-radius: 10px;
+        padding: 40px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 600px;
+    }
+    
+    .auth-title {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #333;
+        font-size: 24px;
+    }
+    
+    .auth-messages {
+        margin-bottom: 20px;
+    }
+    
+    .alert {
+        padding: 12px 15px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        font-size: 14px;
+    }
+    
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .alert-info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+    
+    /* 状态卡片 */
+    .status-card {
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 30px;
+        border-left: 5px solid #6c757d;
+    }
+    
+    .status-card.not_applied {
+        border-left-color: #6c757d;
+        background-color: #f8f9fa;
+    }
+    
+    .status-card.pending {
+        border-left-color: #ffc107;
+        background-color: #fff3cd;
+    }
+    
+    .status-card.approved {
+        border-left-color: #28a745;
+        background-color: #d4edda;
+    }
+    
+    .status-card.rejected {
+        border-left-color: #dc3545;
+        background-color: #f8d7da;
+    }
+    
+    .status-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .status-icon {
+        font-size: 40px;
+    }
+    
+    .status-info {
+        flex: 1;
+    }
+    
+    .status-title {
+        margin: 0 0 5px 0;
+        color: #333;
+        font-size: 20px;
+    }
+    
+    .status-desc {
+        margin: 0;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    /* 状态详情 */
+    .status-details {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 15px;
+    }
+    
+    .detail-item {
+        display: flex;
+        margin-bottom: 12px;
+        font-size: 14px;
+    }
+    
+    .detail-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .detail-label {
+        color: #666;
+        min-width: 80px;
+        font-weight: 500;
+    }
+    
+    .detail-value {
+        color: #333;
+        flex: 1;
+    }
+    
+    .permission-active {
+        color: #28a745;
+        font-weight: 600;
+    }
+    
+    .permission-inactive {
+        color: #dc3545;
+        font-weight: 600;
+    }
+    
+    /* 操作按钮 */
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 30px;
+        justify-content: center;
+    }
+    
+    .action-btn {
+        display: inline-block;
+        padding: 12px 25px;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+        min-width: 150px;
+    }
+    
+    .primary-btn {
+        background-color: #007bff;
+        color: white;
+    }
+    
+    .primary-btn:hover {
+        background-color: #0056b3;
+        color: white;
+    }
+    
+    .secondary-btn {
+        background-color: #6c757d;
+        color: white;
+        cursor: not-allowed;
+    }
+    
+    .success-btn {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .success-btn:hover {
+        background-color: #218838;
+        color: white;
+    }
+    
+    .default-btn {
+        background-color: #e9ecef;
+        color: #495057;
+    }
+    
+    .default-btn:hover {
+        background-color: #dde0e3;
+        color: #495057;
+    }
+    
+    /* 状态说明 */
+    .status-instructions {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        font-size: 14px;
+        color: #495057;
+    }
+    
+    .status-instructions h4 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+    
+    .status-instructions ul {
+        margin-left: 20px;
+        margin-bottom: 0;
+    }
+    
+    .status-instructions li {
+        margin-bottom: 8px;
+    }
+    
+    .status-instructions strong {
+        color: #333;
+    }
+    
+    @media (max-width: 768px) {
+        .auth-card {
+            padding: 25px 20px;
+        }
+        
+        .auth-title {
+            font-size: 20px;
+        }
+        
+        .status-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 10px;
+        }
+        
+        .status-icon {
+            font-size: 35px;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .action-btn {
+            width: 100%;
+        }
+        
+        .detail-item {
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .detail-label {
+            min-width: auto;
+        }
+    }
+</style>
+{% endblock %}

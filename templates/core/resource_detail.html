@@ -198,6 +198,25 @@
 
 <!-- 样式 -->
 <style>
+    .action-btn.reported {
+        background-color: #6c757d;
+        color: white;
+        border-color: #6c757d;
+        cursor: not-allowed;
+    }
+
+    .action-btn.reported .icon {
+        color: white;
+    }
+
+    .action-btn.reported:hover {
+        background-color: #6c757d;
+    }
+
+    .action-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
     /* 返回顶部按钮 */
     .back-to-top-container {
         text-align: center;
@@ -1230,6 +1249,82 @@ document.addEventListener('DOMContentLoaded', function() {
         backToTopBtn.style.transition = 'opacity 0.3s, visibility 0.3s';
         backToTopBtn.style.opacity = '0';
         backToTopBtn.style.visibility = 'hidden';
+    }
+});
+// 举报功能
+document.querySelectorAll('.report-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const resourceId = this.getAttribute('data-resource-id');
+        const reportBtn = this;
+
+        // 检查用户是否登录
+        if (!userAuthenticated) {
+            if (confirm('您需要登录后才能举报，是否立即登录？')) {
+                const currentUrl = window.location.pathname;
+                window.location.href = `/accounts/login/?next=${encodeURIComponent(currentUrl)}`;
+            }
+            return;
+        }
+
+        // 确认举报
+        if (!confirm('确定要举报此资源吗？举报后将无法撤销。')) {
+            return;
+        }
+
+        // 禁用按钮，防止重复点击
+        reportBtn.disabled = true;
+        const originalText = reportBtn.innerHTML;
+        reportBtn.innerHTML = '<span class="icon">⏳</span><span class="count">处理中...</span>';
+
+        // 发送举报请求
+        fetch(`/resource/${resourceId}/report/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // 更新页面上的举报数显示
+                const countElement = reportBtn.querySelector('.count');
+                if (countElement) {
+                    countElement.textContent = data.report_count;
+                }
+
+                // 禁用举报按钮，因为用户已经举报过了
+                reportBtn.disabled = true;
+                reportBtn.innerHTML = '<span class="icon">✅</span><span class="count">已举报</span>';
+                reportBtn.classList.add('reported');
+
+                showMessage(data.message, 'success');
+            } else {
+                // 恢复按钮状态
+                reportBtn.disabled = false;
+                reportBtn.innerHTML = originalText;
+                showMessage(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // 恢复按钮状态
+            reportBtn.disabled = false;
+            reportBtn.innerHTML = originalText;
+            showMessage('网络错误，请重试', 'error');
+        });
+    });
+});
+// 页面加载时检查用户是否已经举报过此资源
+document.addEventListener('DOMContentLoaded', function() {
+    if (userAuthenticated) {
+        // 这里可以添加一个API来检查用户是否已经举报过
+        // 但由于简化设计，我们依靠UI状态来管理
+        const reportBtn = document.querySelector('.report-btn');
+        if (reportBtn && reportBtn.classList.contains('reported')) {
+            reportBtn.disabled = true;
+            reportBtn.innerHTML = '<span class="icon">✅</span><span class="count">已举报</span>';
+        }
     }
 });
 </script>

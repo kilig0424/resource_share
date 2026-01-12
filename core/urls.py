@@ -13,4 +13,6 @@ urlpatterns = [
     path('resource/<int:resource_id>/favorite/', views.favorite_resource, name='favorite_resource'),
     path('resource/<int:resource_id>/comment/', views.add_comment, name='add_comment'),  # 添加评论
     path('comment/<int:comment_id>/delete/', views.delete_comment, name='delete_comment'),  # 删除评论
+    path('resource/<int:resource_id>/report/', views.report_resource, name='report_resource'),
+    #path('hot/', views.hot_resources, name='hot_resources'),
 ]
