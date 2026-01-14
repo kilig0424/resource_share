@@ -101,6 +101,7 @@
 
         <!-- 资源链接 -->
         <div class="section link-section">
+            <div id="resource-data" data-resource-id="{{ resource.id }}" style="display: none;"></div>
             <h2 class="section-title">资源链接</h2>
             <div class="link-container">
                 <div class="link-box">
@@ -817,24 +818,107 @@
         }
     }
     // 复制链接功能
-    function copyResourceLink() {
-        const linkInput = document.getElementById('resource-link');
-        linkInput.select();
-        linkInput.setSelectionRange(0, 99999); // 对于移动设备
-
-        try {
-            navigator.clipboard.writeText(linkInput.value).then(() => {
-                showCopyTips('链接已复制到剪贴板！');
-            });
-        } catch (err) {
-            // 兼容旧浏览器
-            document.execCommand('copy');
-            showCopyTips('链接已复制到剪贴板！');
+// 辅助函数：获取CSRF Token（如果尚未定义）
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
         }
+    }
+    return cookieValue;
+}
 
-        // 更新复制次数（这里需要后端API，稍后实现）
-        // 暂时只是前端显示
-        showCopyTips('链接已复制！稍后将更新复制次数');
+// 从Cookie中获取CSRF令牌的辅助函数
+function getCSRFToken() {
+    let cookieValue = null;
+    const name = 'csrftoken';
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+// 复制链接功能（已集成计数更新）
+function copyResourceLink() {
+    const linkInput = document.getElementById('resource-link');
+    // 从步骤三添加的隐藏元素中获取当前资源的ID
+    const resourceIdElem = document.getElementById('resource-data');
+
+    // 安全检查：确保必要的元素都存在
+    if (!resourceIdElem) {
+        console.error('错误：未找到存储资源ID的元素。请检查模板是否正确添加了 <div id=\"resource-data\">。');
+        showCopyTips('复制失败：页面配置错误');
+        return;
+    }
+    const resourceId = resourceIdElem.dataset.resourceId;
+
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999); // 对于移动设备
+
+    // 第一步：执行复制到剪贴板的操作
+    const copyPromise = navigator.clipboard?.writeText ?
+        navigator.clipboard.writeText(linkInput.value) :
+        new Promise((resolve, reject) => {
+            try {
+                const successful = document.execCommand('copy');
+                successful ? resolve() : reject(new Error('execCommand 复制失败'));
+            } catch (e) {
+                reject(e);
+            }
+        });
+
+    copyPromise
+        .then(() => {
+            // 复制成功，显示提示
+            showCopyTips('链接已复制到剪贴板！');
+
+            // 第二步：复制成功后，异步发送计数更新请求
+            fetch(`/resource/${resourceId}/increase-copy/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(), // 需要获取CSRF令牌的函数
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // 如果HTTP状态码不是2xx，抛出错误
+                    throw new Error(`HTTP错误! 状态码: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 根据后端返回的JSON进行判断
+                if (data.status === 'success') {
+                    console.log(`✅ 复制次数更新成功，新次数: ${data.new_count}`);
+                    // （可选）未来可以在这里更新页面上的计数显示
+                } else {
+                    console.warn('复制次数更新返回了错误状态:', data.message);
+                }
+            })
+            .catch(error => {
+                // 网络错误或JSON解析错误等
+                console.error('❌ 更新复制次数时发生错误:', error);
+                // 注意：这里选择静默失败，不干扰用户复制成功的体验
+            });
+        })
+        .catch(err => {
+            // 复制到剪贴板失败
+            console.error('❌ 复制链接到剪贴板失败:', err);
+            showCopyTips('复制失败，请手动选中链接进行复制');
+        });
     }
 
     function showCopyTips(message) {

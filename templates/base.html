@@ -87,8 +87,8 @@
             <a href="/" class="logo">资源分享站</a>
             <div class="nav-links">
                 <a href="/">首页</a>
-                <a href="#">最新资源</a>
-                <a href="#">热门资源</a>
+<!--                <a href="#">最新资源</a>-->
+<!--                <a href="#">热门资源</a>-->
                 {% if user.is_authenticated %}
                     {% if user.upload_permission %}
                         <a href="{% url 'core:upload_resource' %}">上传资源</a>
@@ -116,8 +116,9 @@
     <!-- 页脚 -->
     <footer class="footer">
         <div class="container">
-            <p>© 2023 资源分享站. All rights reserved.</p>
+            <p>© 2026 资源分享站. All rights reserved.</p>
             <p>免责声明：本站所有资源均为用户分享，仅供学习和研究使用。</p>
+            <p>合作联系：1191531153@qq.com</p>
         </div>
     </footer>
 

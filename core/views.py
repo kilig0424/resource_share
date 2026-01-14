@@ -347,6 +347,43 @@ def report_resource(request, resource_id):
         })
 
 
+# 复制次数统计 API 视图
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.db.models import F
+from .models import Resource
+
+
+@csrf_exempt
+@require_POST
+def increase_copy_count(request, resource_id):
+    """API接口：增加指定资源的复制次数"""
+    try:
+        resource = Resource.objects.get(id=resource_id)
+        # 使用 F() 表达式避免并发问题，原子性地增加计数
+        resource.copy_count = F('copy_count') + 1
+        resource.save(update_fields=['copy_count'])
+
+        # 重新从数据库获取以得到更新后的计数值
+        resource.refresh_from_db()
+
+        return JsonResponse({
+            'status': 'success',
+            'message': '复制次数已更新',
+            'new_count': resource.copy_count
+        })
+    except Resource.DoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'message': '资源不存在'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'服务器内部错误: {str(e)}'
+        }, status=500)
+
 # def hot_resources(request):
 #     """热门资源排行榜"""
 #     # 获取排序参数
