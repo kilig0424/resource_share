@@ -35,7 +35,7 @@
     </div>
 
     <div class="resource-grid">
-        {% for resource in latest_resources %}
+        {% for resource in resources %}
         <div class="resource-card">
             <div class="resource-header">
                 <span class="resource-category">{{ resource.category.name }}</span>
@@ -58,6 +58,26 @@
         </div>
         {% endfor %}
     </div>
+<!-- 分页导航 -->
+{% if resources.has_other_pages %}
+    <div class="pagination">
+    {% if resources.has_previous %}
+        <a href="?page={{ resources.previous_page_number }}" class="page-link">上一页</a>
+    {% endif %}
+
+    {% for num in resources.paginator.page_range %}
+        {% if resources.number == num %}
+            <span class="page-current">{{ num }}</span>
+        {% else %}
+            <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if resources.has_next %}
+        <a href="?page={{ resources.next_page_number }}" class="page-link">下一页</a>
+    {% endif %}
+</div>
+{% endif %}
 </div>
 
 <!-- 添加一些CSS样式 -->
@@ -254,6 +274,33 @@
         .resource-grid {
             grid-template-columns: 1fr;
         }
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 30px;
+        padding: 20px 0;
+    }
+    .page-link, .page-current {
+        padding: 8px 15px;
+        border-radius: 4px;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .page-link {
+        background-color: #f0f0f0;
+        color: #333;
+    }
+    .page-link:hover {
+        background-color: #007bff;
+        color: white;
+    }
+    .page-current {
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
     }
 </style>
 {% endblock %}

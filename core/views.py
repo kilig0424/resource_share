@@ -14,12 +14,25 @@ def index(request):
     # 获取所有分类
     categories = Category.objects.all()
 
-    # 获取最新的10个资源，按创建时间倒序排列
-    latest_resources = Resource.objects.filter(is_approved=True).order_by('-created_at')[:10]
+    # 获取所有已审核资源，按创建时间倒序排列
+    resources_list = Resource.objects.filter(is_approved=True).order_by('-created_at')
+
+    # 分页处理 - 每页12条
+    paginator = Paginator(resources_list, 12)
+    page_number = request.GET.get('page')
+
+    try:
+        resources = paginator.page(page_number)
+    except PageNotAnInteger:
+        # 如果页码不是整数，显示第一页
+        resources = paginator.page(1)
+    except EmptyPage:
+        # 如果页码超出范围，显示最后一页
+        resources = paginator.page(paginator.num_pages)
 
     context = {
         'categories': categories,
-        'latest_resources': latest_resources,
+        'resources': resources,  # 改为分页后的资源
     }
     return render(request, 'core/index.html', context)
 
