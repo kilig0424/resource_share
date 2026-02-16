@@ -1,9 +1,16 @@
 from django.urls import path
 from . import views
+from django.contrib.sitemaps.views import sitemap
+from .sitemap import ResourceSitemap
 
 
 
 app_name = 'core'
+
+
+sitemaps = {
+    'resources': ResourceSitemap,
+}
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -18,4 +25,5 @@ urlpatterns = [
     path('resource/<int:resource_id>/report/', views.report_resource, name='report_resource'),
     path('resource/<int:resource_id>/increase-copy/', views.increase_copy_count, name='increase_copy_count'),
     #path('hot/', views.hot_resources, name='hot_resources'),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
 ]

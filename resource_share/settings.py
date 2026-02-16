@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'accounts',
+    'django.contrib.sitemaps',
 ]
 
 MIDDLEWARE = [
