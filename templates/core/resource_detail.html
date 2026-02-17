@@ -2,6 +2,22 @@
 
 {% block title %}{{ resource.title }} - 资源分享站{% endblock %}
 
+{% block description %}
+    {% if resource.description %}
+        {{ resource.description|striptags|truncatechars:160 }}
+    {% else %}
+        {{ resource.title }} - 网盘资源下载
+    {% endif %}
+{% endblock %}
+
+{% block keywords %}
+    {% if resource.keywords %}
+        {{ resource.keywords }}
+    {% else %}
+        {{ resource.category.name }},资源下载,网盘资源
+    {% endif %}
+{% endblock %}
+
 {% block content %}
 <div class="resource-detail-container">
     <!-- 面包屑导航 -->
